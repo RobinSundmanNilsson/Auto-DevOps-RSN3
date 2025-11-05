@@ -26,7 +26,7 @@ def collect_smhi_data(lat=latitude, lon=longitude):
 
         if forecast_datetime < current_time:
             continue
-        if hours_collected >= 24:
+        if hours_collected >= 48:
             break
 
         forecast_date, forecast_hour = valid_time.split("T")
@@ -49,40 +49,15 @@ def collect_smhi_data(lat=latitude, lon=longitude):
         hours_collected += 1
 
     df = pd.DataFrame(forecast_data_smhi)
-    df.to_excel("smhi_weather_forecast_24h.xlsx", index=False)
+    df.to_excel("smhi_weather_forecast_72h.xlsx", index=False)
     return df, "Success"
 
 
-# ========== File Loader ==========
-def load_saved_data():
+# ========== File Loaders ==========
+def load_saved_data(provider: str):
     """Load previously saved forecast data from Excel."""
     try:
-        return pd.read_excel("smhi_weather_forecast_24h.xlsx")
+        if provider.lower() == "smhi":
+            return pd.read_excel("smhi_weather_forecast_72h.xlsx")
     except FileNotFoundError:
         return None
-    
-if __name__ == "__main__":
-    print("Testing SMHI data collection...")
-    print(f"Fetching weather for Stockholm (lat: {latitude}, lon: {longitude})")
-
-    # Test collect_smhi_data
-    df, status = collect_smhi_data()
-
-    if df is not None:
-        print(f"\n✅ Success! Status: {status}")
-        print(f"\nCollected {len(df)} hours of forecast data")
-        print("\nFirst 5 rows:")
-        print(df.head())
-        print("\nFile saved as: smhi_weather_forecast_24h.xlsx")
-    else:
-        print(f"\n❌ Error: {status}")
-
-    # Test load_saved_data
-    print("\n" + "="*50)
-    print("Testing load_saved_data...")
-    loaded_df = load_saved_data()
-
-    if loaded_df is not None:
-        print(f"✅ Successfully loaded {len(loaded_df)} rows from file")
-    else:
-        print("❌ No saved file found")
