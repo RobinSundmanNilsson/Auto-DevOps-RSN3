@@ -3,12 +3,51 @@ name: RSN3 - CI/CD
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      log_errors:
+        description: “Skapa och ladda upp testloggar vid fel”
+        required: true
+        type: boolean
+        default: false
 
 env:
   IMAGE_NAME: robinsundmannilsson/smhi_weather_dashboard
 
 jobs:
+  tests:
+    name: Run tests (unit + integration)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install pytest requests pandas
+          fi
+
+      - name: pytest
+        run: |
+          mkdir -p artifacts
+          pytest -q | tee artifacts/test.log
+
+      - name: upload logs on failure (manual + flag)
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.log_errors == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-error-logs
+          path: artifacts/*.log
+          retention-days: 7
+          
   build-and-push:
     runs-on: ubuntu-latest
     environment: DOCKER_HUB
