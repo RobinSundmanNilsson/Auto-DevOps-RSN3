@@ -49,6 +49,7 @@ jobs:
           retention-days: 7
           
   build-and-push:
+    name: Build & push Docker image to Docker Hub
     runs-on: ubuntu-latest
     environment: DOCKER_HUB
     permissions:
