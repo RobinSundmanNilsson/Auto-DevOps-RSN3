@@ -26,4 +26,4 @@ def test_collect_smhi_data_success(mock_get):
     assert status == "Success"
     assert isinstance(df, pd.DataFrame)
     assert df["Temperature (°C)"].iloc[0] == 5
-    assert df["Rain or Snow"].iloc[0] is True
+    assert df["Rain or Snow"].iloc[0] == True
