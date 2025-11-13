@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 from app import collect_smhi_data
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import plotly.express as px
 
 st.set_page_config(page_title="SMHI Weather Forecast", page_icon="🌦️", layout="wide")
 st.title("🌦️ SMHI Weather Forecast Dashboard")
 
-st.write("View 48-hour weather forecast from **SMHI** API.")
+st.write("Se den senaste 48-timmarsprognosen från **SMHI**.")
+
+# ---------------- Sidebar ----------------
 
 st.sidebar.header("Plats")
 
@@ -32,73 +33,85 @@ city_lat, city_lon = next((lat, lon) for name, lat, lon in cities if name == sel
 latitude = city_lat
 longitude = city_lon
 
+# ---------------- Hämta data ----------------
+
 with st.spinner("Hämtar prognos från SMHI..."):
     df_smhi, msg = collect_smhi_data(lat=latitude, lon=longitude)
 
-if df_smhi is not None:
-    st.success(f" Prognos hämtad för {selected_city} ({latitude:.4f}, {longitude:.4f})")
-    st.dataframe(df_smhi, width="stretch")
-else:
+if df_smhi is None:
     st.error(msg)
+    st.stop()
 
+st.success(f" Prognos hämtad för {selected_city} ({latitude:.4f}, {longitude:.4f})")
 
-#----------- Daily Precipitation Summary ----------
+df_smhi["Datetime"] = pd.to_datetime(df_smhi["Date"] + " " + df_smhi["Hour"])
+df_smhi = df_smhi.sort_values("Datetime")
 
-st.subheader("Weather Forecast: Rain & Snow (48h Forecast)")
+df_48 = df_smhi.head(48)
+df_24 = df_48.head(24)
 
-chart_df = df_smhi.copy()
-chart_df["Datetime"] = pd.to_datetime(chart_df["Date"] + " " + chart_df["Hour"])
-chart_df["Weekday"] = chart_df["Datetime"].dt.strftime("%A")
+# ---------------- Temperaturtrend 48h ----------------
 
-# Classify rain vs snow based on temperature
-def classify_precip(row):
-    if row["Rain or Snow"]:
-        return "Snow" if row["Temperature (°C)"] <= 0 else "Rain"
-    return None
+st.subheader(f"{selected_city} - Temperaturtrend kommande 48h")
 
-chart_df["WeatherType"] = chart_df.apply(classify_precip, axis=1)
+fig = px.line(
+    df_48,
+    x="Datetime",
+    y="Temperature (°C)",
+    markers=True,
+    title=None,
+)
 
-# Summarize per day
-daily_summary = chart_df.groupby("Date")["WeatherType"].apply(lambda x: set(filter(None, x))).reset_index()
-daily_summary["Weekday"] = pd.to_datetime(daily_summary["Date"]).dt.strftime("%A")
+fig.update_traces(
+    hovertemplate="%{x|%b %d, %H:%M}<br>%{y:.0f}°C"
+)
 
+fig.update_layout(
+    template="plotly_white",
+    height=350,
+    margin=dict(l=20, r=20, t=40, b=20),
+)
 
-daily_summary["Rain"] = daily_summary["WeatherType"].apply(lambda x: "🌧️" if "Rain" in x else "❌")
-daily_summary["Snow"] = daily_summary["WeatherType"].apply(lambda x: "❄️" if "Snow" in x else "❌")
-daily_summary_display = daily_summary[["Weekday", "Date", "Rain", "Snow"]]
+fig.update_xaxes(title_text="Date & Time")
+fig.update_yaxes(title_text="Temp. (°C)")
 
-# Display without index
-st.dataframe(daily_summary_display, use_container_width=True, hide_index=True)
+st.plotly_chart(fig, width="stretch")
 
+# ---------------- Nyckelvärden 24h ----------------
 
-#----------- Temperature Trend Plot ----------
+st.subheader("Nyckelvärden kommande 24h")
 
-st.subheader(f"{selected_city} — Next 12 Hours Temperature")
+if not df_24.empty:
+    col1, col2, col3, col4 = st.columns(4)
 
-city_df, msg = collect_smhi_data(lat=latitude, lon=longitude)
-if city_df is not None:
-    city_df["Datetime"] = pd.to_datetime(city_df["Date"] + " " + city_df["Hour"])
-    city_df = city_df.sort_values("Datetime").head(12)  
+    current_temp = df_24.iloc[0]["Temperature (°C)"]
+    max_temp_24 = df_24["Temperature (°C)"].max()
+    min_temp_24 = df_24["Temperature (°C)"].min()
 
-    fig, ax = plt.subplots(figsize=(8, 3), facecolor="#f0f0f0")  # light grey background
-    ax.plot(city_df["Datetime"], city_df["Temperature (°C)"], linewidth=2, color="orange", marker='o', markersize=4)
+    precip_24 = df_24[df_24["Rain or Snow"] == True]
 
-    # Axis labels
-    ax.set_ylabel("Temperature (°C)", fontsize=10)
-    #ax.set_title(f"{selected_city} — Next 12 Hours Temperature", fontsize=14)
-    ax.grid(False) # Remove gridlines
+    col1.metric("Nuvarande temp", f"{current_temp:.0f} °C")
+    col2.metric("Max (24h)", f"{max_temp_24:.0f} °C")
+    col3.metric("Min (24h)", f"{min_temp_24:.0f} °C")
 
-    # Removed spines
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
+    if precip_24.empty:
+        precip_value = "0 h"
+        precip_delta = "ingen nederbörd"
+    else:
+        hours_with_precip = len(precip_24)
+        first_precip_time = precip_24.iloc[0]["Datetime"]
 
-    # adjust/remove ticks
-    ax.tick_params(left=False, bottom=True)
+        precip_value = f"{hours_with_precip} h"
+        precip_delta = f"start {first_precip_time:%H:%M}"
 
-    #  x-axis ticks: show every 2nd hour
-    ax.xaxis.set_major_locator(mdates.HourLocator(interval=2))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    col4.metric("Nederbörd (24h)", precip_value, precip_delta)
 
-    st.pyplot(fig)
+else:
+    st.info("Ingen 24h-prognos tillgänglig.")
+
+# ---------------- Rådata ----------------
+
+st.subheader("Rådata från SMHI")
+
+with st.expander("Visa tabell"):
+    st.dataframe(df_smhi, width="stretch")
