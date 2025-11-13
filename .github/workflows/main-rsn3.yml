@@ -36,17 +36,24 @@ jobs:
           fi
 
       - name: pytest
+        id: pytest
+        continue-on-error: true
         run: |
           mkdir -p artifacts
+          set -o pipefail
           pytest -q | tee artifacts/test.log
 
       - name: upload logs on failure (manual + flag)
-        if: ${{ failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.log_errors == 'true' }}
+        if: ${{ steps.pytest.outcome == 'failure' && github.event_name == 'workflow_dispatch' && github.event.inputs.log_errors == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: test-error-logs
           path: artifacts/*.log
           retention-days: 7
+
+      - name: Fail job if tests failed
+        if: ${{ steps.pytest.outcome == 'failure' }}
+        run: exit 1
           
   build-and-push:
     name: Build & push Docker image to Docker Hub
