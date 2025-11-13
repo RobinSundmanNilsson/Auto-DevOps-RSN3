@@ -72,7 +72,7 @@ fig.update_layout(
     margin=dict(l=20, r=20, t=40, b=20),
 )
 
-fig.update_xaxes(title_text="Date & Time")
+fig.update_xaxes(title_text="Datum & Tid")
 fig.update_yaxes(title_text="Temp. (°C)")
 
 st.plotly_chart(fig, width="stretch")
