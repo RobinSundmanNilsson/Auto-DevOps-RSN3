@@ -104,16 +104,16 @@ Docker Hub.
 
 För att pipelinen ska fungera krävs environment:
 
-    DOCKER_HUB
+`DOCKER_HUB`
 
 I denna environment ska följande secrets finnas:
 
-  Secret                    Funktion
-  ------------------------- -------------------------
-  **DOCKER_HUB_USERNAME**   Docker Hub användarnamn
-  **DOCKER_HUB_TOKEN**      Docker Hub Access Token
+| Secret                 | Funktion                |
+|------------------------|-------------------------|
+| **DOCKER_HUB_USERNAME** | Docker Hub användarnamn |
+| **DOCKER_HUB_TOKEN**    | Docker Hub Access Token |
 
-Access Token genereras via Docker Hub
+Access Token genereras via Docker Hub.
 
 ------------------------------------------------------------------------
 
