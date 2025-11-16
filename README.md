@@ -137,7 +137,6 @@ docker run -p 8501:8501 smhi_weather_dashboard
 
 ### 1️⃣ Kombination av mockade tester och integrationstest
 
-Kombination av mockade tester och integrationstest
 Pipelinen kör ett mockat enhetstest för att säkerställa stabila och reproducerbara resultat.
 Den kör även ett integrationstest som anropar SMHI:s riktiga API.
 Båda testerna körs automatiskt och kan stoppa byggsteget vid fel.
