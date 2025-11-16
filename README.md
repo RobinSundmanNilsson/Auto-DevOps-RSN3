@@ -16,17 +16,29 @@ CI/CD-pipeline, tester och designval.
 
 ## 🧪 Tester
 
+Projektet innehåller två typer av tester: ett mockat enhetstest och ett integrationstest mot SMHI:s riktiga API. 
+Båda körs automatiskt i pipelinen när du pushar till main, och båda kan stoppa byggsteget om de misslyckas.
+
 ### ✔ Enhetstester (mockade)
 
--   SMHI-anrop mockas med `unittest.mock.patch`.
--   Testar databehandlingslogik och datastruktur.
--   Körs automatiskt i pipelinen.
--   Blockerar build vid fel.
+Fil: `test_process_smhi_data.py`
+Detta test mockar SMHI-anropet med unittest.mock.patch och testar endast applikationens interna logik:
+
+- Databehandling
+- Struktur på det skapade DataFrame
+- Avrundning av temperatur
+- Logik för rain/snow
+
+Det är helt frikopplat från nätverk och API, vilket gör det stabilt och reproducerbart.
 
 ### ✔ Integrationstest
 
--   Testar att applikationen kan hantera verkliga SMHI-responser.
--   Körs separat (workflow_dispatch).
+Fil: `test_api.py`
+Detta test anropar SMHI:s verkliga API och verifierar att applikationen kan:
+
+- Hämtar data från API:t
+- Läser JSON-strukturen
+- Hantera timeSeries korrekt
 
 ------------------------------------------------------------------------
 
