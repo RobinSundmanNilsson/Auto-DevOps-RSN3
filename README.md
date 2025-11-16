@@ -29,7 +29,7 @@ Detta test mockar SMHI-anropet med unittest.mock.patch och testar endast applika
 - Avrundning av temperatur
 - Logik för rain/snow
 
-Det är helt frikopplat från nätverk och API, vilket gör det stabilt och reproducerbart.
+Detta är helt frikopplat från nätverk och API, vilket gör det stabilt och reproducerbart.
 
 ### ✔ Integrationstest
 
@@ -39,6 +39,28 @@ Detta test anropar SMHI:s verkliga API och verifierar att applikationen kan:
 - Hämtar data från API:t
 - Läser JSON-strukturen
 - Hantera timeSeries korrekt
+
+Eftersom det anropar SMHI:s riktiga API är testet känsligare för yttre faktorer, 
+men det körs fortfarande tillsammans med övriga tester i pipelinen.
+
+### ✔ Hur testerna körs i pipelinen
+
+Pipelinen kör:
+
+`pytest -q`
+
+Detta innebär att alla tester i projektet körs automatiskt både vid:
+
+- push till main
+- manuellt med `workflow_dispatch`
+
+Om något test misslyckas:
+
+- testloggar sparas (om workflow_dispatch + log_errors = true)
+- tests-jobbet failar
+- build-and-push-jobbet körs inte
+
+Detta säkerställer att endast godkänd kod byggs och publiceras.
 
 ------------------------------------------------------------------------
 
