@@ -135,12 +135,12 @@ docker run -p 8501:8501 smhi_weather_dashboard
 
 ## 🧩 Designval
 
-### 1️⃣ Mockade tester i CI
+### 1️⃣ Kombination av mockade tester och integrationstest
 
-För att pipelines ska vara stabila och reproducerbara mockas externa
-API-anrop.\
-Detta säkerställer att fel eller långsamhet hos SMHI inte stoppar
-utvecklingsflödet.
+Kombination av mockade tester och integrationstest
+Pipelinen kör ett mockat enhetstest för att säkerställa stabila och reproducerbara resultat.
+Den kör även ett integrationstest som anropar SMHI:s riktiga API.
+Båda testerna körs automatiskt och kan stoppa byggsteget vid fel.
 
 ### 2️⃣ needs + if för logik och beroenden
 
