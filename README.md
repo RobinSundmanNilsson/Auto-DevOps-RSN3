@@ -19,7 +19,7 @@ CI/CD-pipeline, tester och designval.
 ### ✔ Enhetstester (mockade)
 
 -   SMHI-anrop mockas med `unittest.mock.patch`.
--   Testar databehandlingslogik och dataramstruktur.
+-   Testar databehandlingslogik och datastruktur.
 -   Körs automatiskt i pipelinen.
 -   Blockerar build vid fel.
 
@@ -72,15 +72,14 @@ För att pipelinen ska fungera krävs environment:
 
     DOCKER_HUB
 
-I detta environment ska följande secrets finnas:
+I denna environment ska följande secrets finnas:
 
   Secret                    Funktion
   ------------------------- -------------------------
   **DOCKER_HUB_USERNAME**   Docker Hub användarnamn
   **DOCKER_HUB_TOKEN**      Docker Hub Access Token
 
-Token genereras via Docker Hub → Account Settings → Security → *New
-Access Token*.
+Access Token genereras via Docker Hub
 
 ------------------------------------------------------------------------
 
@@ -95,7 +94,7 @@ docker build -t smhi_weather_dashboard .
 ### Kör lokalt:
 
 ``` bash
-docker run -p 8000:8000 smhi_weather_dashboard
+docker run -p 8501:8501 smhi_weather_dashboard
 ```
 
 ------------------------------------------------------------------------
@@ -106,48 +105,28 @@ docker run -p 8000:8000 smhi_weather_dashboard
 
 För att pipelines ska vara stabila och reproducerbara mockas externa
 API-anrop.\
-Det säkerställer att fel eller långsamhet hos SMHI inte stoppar
+Detta säkerställer att fel eller långsamhet hos SMHI inte stoppar
 utvecklingsflödet.
 
-### 2️⃣ Separata integrationstester
-
-Integrationstest körs endast manuellt för att undvika att pipelines blir
-flakiga och beroende av tredjepartstjänster.
-
-### 3️⃣ needs + if för logik och beroenden
+### 2️⃣ needs + if för logik och beroenden
 
 `build-and-push` körs endast om `tests`-jobbet är grönt.\
 Detta garanterar kvalitet före distribution.
 
-### 4️⃣ workflow_dispatch-parameter för loggar
+### 3️⃣ workflow_dispatch-parameter för loggar
 
 Ger kontroll och gör pipelinen mer flexibel:\
 Man kan begära detaljerade felsökningsloggar endast när det behövs.
 
-### 5️⃣ Docker tag-strategi
+### 4️⃣ Docker tag-strategi
 
 Tre tags används: - `latest` för Azure Web App. - commit-SHA för
 spårbarhet. - branch-namn för parallella miljöer.
 
-### 6️⃣ Docker Hub som registry
+### 5️⃣ Docker Hub som registry
 
 Azure Web App drar automatiskt senaste imagen från Docker Hub.\
-Det ger en enkel och robust deploy-modell.
-
-------------------------------------------------------------------------
-
-## 📂 Struktur
-
-    .
-    ├── app.py
-    ├── requirements.txt
-    ├── tests/
-    │   ├── test_api.py
-    │   └── test_process_smhi_data.py
-    ├── Dockerfile
-    └── .github/
-        └── workflows/
-            └── main.yml
+Detta ger en enkel och robust deploy-modell.
 
 ------------------------------------------------------------------------
 
