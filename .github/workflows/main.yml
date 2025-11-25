@@ -1,4 +1,4 @@
-name: RSN3 - CI/CD
+name: RSN - CI/CD
 
 on:
   push:
